@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/hamster/coding/WebServer1/main.cpp
+sys/socket.h
+-
+stdio.h
+-
+stdlib.h
+-
+netinet/in.h
+-
+arpa/inet.h
+-
+errno.h
+-
+string.h
+-
+unistd.h
+-
+assert.h
+-
+sys/epoll.h
+-
+util.h
+/home/hamster/coding/WebServer1/util.h
+pthread.h
+-
+
+/home/hamster/coding/WebServer1/util.cpp
+util.h
+/home/hamster/coding/WebServer1/util.h
+fcntl.h
+-
+
+/home/hamster/coding/WebServer1/util.h
+

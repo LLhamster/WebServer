@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/hamster/coding/WebServer1/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++17 -o CMakeFiles/server.dir/main.cpp.o -c /home/hamster/coding/WebServer1/main.cpp",
+  "file": "/home/hamster/coding/WebServer1/main.cpp"
+},
+{
+  "directory": "/home/hamster/coding/WebServer1/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++17 -o CMakeFiles/server.dir/util.cpp.o -c /home/hamster/coding/WebServer1/util.cpp",
+  "file": "/home/hamster/coding/WebServer1/util.cpp"
+}
+]
