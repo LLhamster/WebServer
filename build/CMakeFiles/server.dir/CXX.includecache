@@ -32,11 +32,5 @@ util.h
 pthread.h
 -
 
-/home/hamster/coding/WebServer1/util.cpp
-util.h
-/home/hamster/coding/WebServer1/util.h
-fcntl.h
--
-
 /home/hamster/coding/WebServer1/util.h
 

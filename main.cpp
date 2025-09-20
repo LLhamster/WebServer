@@ -40,25 +40,47 @@ int dqueue() {
     return fd;
 }
 
+static void drain_read(int fd) {
+    char buf[4096];
+    for (;;) {
+        ssize_t n = recv(fd, buf, sizeof(buf), 0);
+        if (n > 0) continue;
+        if (n == 0) break; // 对端关闭
+        if (errno == EINTR) continue;
+        if (errno == EAGAIN || errno == EWOULDBLOCK) break;
+        break;
+    }
+}
+
 void* worker(void* arg){
     while(1){
         int work_fd = dqueue();
+
+        // const char *header = "HTTP/1.1 200 OK\r\n"
+        // "Content-Type: text/plain\r\n"
+        // "Content-Length: 14\r\n\r\n"
+        // "Hello world\nHHH";
+        // write(work_fd, header, strlen(header));
+
         const char *header =
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-Type: text/plain\r\n"
-                        "Transfer-Encoding: chunked\r\n\r\n";
-        (void)write(work_fd, header, strlen(header));
-        // 第一个chunk (长度 11 = "Hello world")
-        (void)write(work_fd, "B\r\nHello world\r\n", 15);
-        sleep(5);
-        // 第二个chunk (长度 3 = "HHH")
-        (void)write(work_fd, "3\r\nHHH\r\n", 7);
-        // 结束chunk
-        (void)write(work_fd, "0\r\n\r\n", 5);
-        // struct epoll_event* work_event;
-        // work_event->events = EPOLLIN | EPOLLET | EPOLLONESHOT;
-        // work_event->data.fd = work_fd;
-        // epoll_ctl(epollfd, EPOLL_CTL_ADD, work_fd, work_event);
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain; charset=utf-8\r\n"
+            "Transfer-Encoding: chunked\r\n"
+            "Connection: close\r\n\r\n";
+
+        write(work_fd, header, strlen(header));
+
+        // 第一个 chunk：11(0xB) 字节 + CRLF
+        write(work_fd, "B\r\nHello world\r\n", strlen("B\r\nHello world\r\n")); // 16
+
+        // 第二个 chunk：3(0x3) 字节 + CRLF
+        write(work_fd, "3\r\nHHH\r\n", strlen("3\r\nHHH\r\n")); // 8
+
+        // 结束 chunk
+        write(work_fd, "0\r\n\r\n", strlen("0\r\n\r\n")); // 5
+
+        shutdown(work_fd, SHUT_WR);
+        drain_read(work_fd);
         close(work_fd);
 }
     return NULL;
@@ -91,7 +113,7 @@ int main(int argc,char *argv[]) {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(argv[1]);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if(bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) != 0) {
         printf("bind error\n");
