@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # 添加可执行文件
-add_executable(server main.cpp util.cpp)
+add_executable(server main.cpp util.cpp pthread.cpp epoll.cpp)
 
 # 添加 pthread 选项
 find_package(Threads REQUIRED)

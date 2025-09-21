@@ -8,5 +8,15 @@
   "directory": "/home/hamster/coding/WebServer1/build",
   "command": "/usr/bin/g++    -g   -std=gnu++17 -o CMakeFiles/server.dir/util.cpp.o -c /home/hamster/coding/WebServer1/util.cpp",
   "file": "/home/hamster/coding/WebServer1/util.cpp"
+},
+{
+  "directory": "/home/hamster/coding/WebServer1/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++17 -o CMakeFiles/server.dir/pthread.cpp.o -c /home/hamster/coding/WebServer1/pthread.cpp",
+  "file": "/home/hamster/coding/WebServer1/pthread.cpp"
+},
+{
+  "directory": "/home/hamster/coding/WebServer1/build",
+  "command": "/usr/bin/g++    -g   -std=gnu++17 -o CMakeFiles/server.dir/epoll.cpp.o -c /home/hamster/coding/WebServer1/epoll.cpp",
+  "file": "/home/hamster/coding/WebServer1/epoll.cpp"
 }
 ]

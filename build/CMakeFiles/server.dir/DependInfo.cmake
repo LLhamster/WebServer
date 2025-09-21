@@ -4,7 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/hamster/coding/WebServer1/epoll.cpp" "/home/hamster/coding/WebServer1/build/CMakeFiles/server.dir/epoll.cpp.o"
   "/home/hamster/coding/WebServer1/main.cpp" "/home/hamster/coding/WebServer1/build/CMakeFiles/server.dir/main.cpp.o"
+  "/home/hamster/coding/WebServer1/pthread.cpp" "/home/hamster/coding/WebServer1/build/CMakeFiles/server.dir/pthread.cpp.o"
   "/home/hamster/coding/WebServer1/util.cpp" "/home/hamster/coding/WebServer1/build/CMakeFiles/server.dir/util.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

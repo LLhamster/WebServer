@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/server.dir/epoll.cpp.o"
   "CMakeFiles/server.dir/main.cpp.o"
+  "CMakeFiles/server.dir/pthread.cpp.o"
   "CMakeFiles/server.dir/util.cpp.o"
   "server"
   "server.pdb"

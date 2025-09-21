@@ -123,6 +123,33 @@ server/fast:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
 .PHONY : server/fast
 
+epoll.o: epoll.cpp.o
+
+.PHONY : epoll.o
+
+# target to build an object file
+epoll.cpp.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/epoll.cpp.o
+.PHONY : epoll.cpp.o
+
+epoll.i: epoll.cpp.i
+
+.PHONY : epoll.i
+
+# target to preprocess a source file
+epoll.cpp.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/epoll.cpp.i
+.PHONY : epoll.cpp.i
+
+epoll.s: epoll.cpp.s
+
+.PHONY : epoll.s
+
+# target to generate assembly for a file
+epoll.cpp.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/epoll.cpp.s
+.PHONY : epoll.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -149,6 +176,33 @@ main.s: main.cpp.s
 main.cpp.s:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/main.cpp.s
 .PHONY : main.cpp.s
+
+pthread.o: pthread.cpp.o
+
+.PHONY : pthread.o
+
+# target to build an object file
+pthread.cpp.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/pthread.cpp.o
+.PHONY : pthread.cpp.o
+
+pthread.i: pthread.cpp.i
+
+.PHONY : pthread.i
+
+# target to preprocess a source file
+pthread.cpp.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/pthread.cpp.i
+.PHONY : pthread.cpp.i
+
+pthread.s: pthread.cpp.s
+
+.PHONY : pthread.s
+
+# target to generate assembly for a file
+pthread.cpp.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/pthread.cpp.s
+.PHONY : pthread.cpp.s
 
 util.o: util.cpp.o
 
@@ -186,9 +240,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... server"
+	@echo "... epoll.o"
+	@echo "... epoll.i"
+	@echo "... epoll.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... pthread.o"
+	@echo "... pthread.i"
+	@echo "... pthread.s"
 	@echo "... util.o"
 	@echo "... util.i"
 	@echo "... util.s"
