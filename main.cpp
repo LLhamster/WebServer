@@ -12,6 +12,13 @@
 #include <pthread.h>
 #include "epoll.h"
 #include "pthread.h"
+#include <signal.h>
+#include "client_count.h"
+
+// 全局客户端计数及互斥锁
+typedef volatile int atomic_int;
+atomic_int client_count = 0;
+pthread_mutex_t client_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int socket_bind_listen(int port) {
     //创建一个套接字
@@ -30,7 +37,7 @@ int socket_bind_listen(int port) {
         return -1;
     }
     //监听套接字
-    if(listen(sockfd, 1) != 0) {
+    if(listen(sockfd, 128) != 0) {
         perror("listen error\n");
         close(sockfd);
         return -1;
@@ -38,7 +45,11 @@ int socket_bind_listen(int port) {
     return sockfd;
 }
 
-int main(int argc,char *argv[]) {   
+int main(int argc,char *argv[]) {
+#ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif
+
     //判断命令行参数个数是否正确
     if(argc < 3) {
         printf("usage:%s ip_address port number\n",argv[0]);
@@ -67,7 +78,11 @@ int main(int argc,char *argv[]) {
     while(1){
         printf("wait for new connection...\n");
         int result = epoll::epoll_wait_work(sockfd);
-        printf("result=%d\n", result);
+        // 这里仅演示如何安全打印当前连接数，实际加减应在accept/close处
+        pthread_mutex_lock(&client_count_mutex);
+        printf("当前客户端连接数: %d\n", client_count);
+        pthread_mutex_unlock(&client_count_mutex);
+        // printf("result=%d\n", result);
         if(result < 0){
             printf("epoll wait error\n");
             break;      

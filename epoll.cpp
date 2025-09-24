@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include "pthread.h"
+#include "client_count.h"
 
 uint32_t epoll::events_ = 0;
 struct epoll_event epoll::event_[1024];
@@ -68,8 +69,10 @@ int epoll::epoll_wait_work(int sockfd) {
                         // workEvent.events = workEvents;
                         // workEvent.data.fd = connfd;
                         // epoll_ctl(epollfd_, EPOLL_CTL_ADD, connfd, &workEvent);
+                        pthread_mutex_lock(&client_count_mutex);
+                        client_count++;
+                        pthread_mutex_unlock(&client_count_mutex);
                         pthread::enque(connfd);
-                        printf("new connection");
                     }
                 }
                 // else{
