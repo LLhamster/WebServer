@@ -25,6 +25,8 @@ int socket_bind_listen(int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     assert(sockfd >= 0);
     assert(setnoblock(sockfd) != -1);
+    int opt = 1;
+    if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)));
     //命名套接字
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
@@ -77,11 +79,11 @@ int main(int argc,char *argv[]) {
     //接受连接
     while(1){
         printf("wait for new connection...\n");
-        int result = epoll::epoll_wait_work(sockfd);
-        // 这里仅演示如何安全打印当前连接数，实际加减应在accept/close处
         pthread_mutex_lock(&client_count_mutex);
         printf("当前客户端连接数: %d\n", client_count);
         pthread_mutex_unlock(&client_count_mutex);
+        int result = epoll::epoll_wait_work(sockfd);
+        // 这里仅演示如何安全打印当前连接数，实际加减应在accept/close处
         // printf("result=%d\n", result);
         if(result < 0){
             printf("epoll wait error\n");

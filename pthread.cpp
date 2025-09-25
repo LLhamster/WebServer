@@ -18,6 +18,8 @@
 #include <unordered_set>
 #include <vector>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 
 
@@ -114,25 +116,19 @@ static void respond_html(int fd){
         "<style>body{font-family:sans-serif;max-width:680px;margin:20px auto;}#log{border:1px solid #ccc;height:300px;overflow:auto;padding:8px;white-space:pre-wrap;}form{display:flex;gap:8px;margin-top:8px;}input[type=text]{flex:1;padding:6px;}button{padding:6px 12px;}</style>"
         "</head><body><h2>聊天室</h2><div id=\"log\"></div>"
         "<form id=\"f\"><input id=\"msg\" type=\"text\" placeholder=\"输入消息后回车或点发送\"><button>发送</button></form>"
-        "<script>const log=document.getElementById('log');function append(t){const b=log.scrollTop+log.clientHeight>=log.scrollHeight-5;log.textContent+=t+'\n';if(b)log.scrollTop=log.scrollHeight;}const es=new EventSource('/events');es.onmessage=(e)=>append(e.data);es.onerror=()=>append('[系统] 连接断开，刷新页面重试');const f=document.getElementById('f');const m=document.getElementById('msg');f.addEventListener('submit',async(e)=>{e.preventDefault();const t=m.value.trim();if(!t)return;try{await fetch('/send',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'msg='+encodeURIComponent(t)});m.value='';}catch(err){append('[系统] 发送失败：'+err);}});</script>"
+        // 关键修复：在 C/C++ 字符串里需要对 JS 的 \n 进行二次转义为 \\n
+        "<script>const log=document.getElementById('log');function append(t){const b=log.scrollTop+log.clientHeight>=log.scrollHeight-5;log.textContent+=t+'\\n';if(b)log.scrollTop=log.scrollHeight;}const es=new EventSource('/events');es.onmessage=(e)=>append(e.data);es.onerror=()=>append('[系统] 连接断开，刷新页面重试');const f=document.getElementById('f');const m=document.getElementById('msg');f.addEventListener('submit',async(e)=>{e.preventDefault();const t=m.value.trim();if(!t)return;try{await fetch('/send',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'msg='+encodeURIComponent(t)});m.value='';}catch(err){append('[系统] 发送失败：'+err);}});</script>"
         "</body></html>";
     
     char header[256];
     int n = snprintf(header, sizeof(header),
-                     "HTTP/1.1 200 OK\r\n"
-                     "Content-Length: %zu\r\n"
-                     "Content-Type: text/html;charset=utf-8\r\n"
-                     "Connection: close\r\n"
-                     "\r\n",
-                     strlen(html));
-
-    // int n = snprintf(header, sizeof(header),
-    //              "HTTP/1.1 200 OK\r\n"
-    //              "Content-Length: %zu\r\n"
-    //              "Content-Type: text/html;charset=utf-8\r\n"
-    //              "Connection: keep-alive\r\n"
-    //              "\r\n",
-    //              strlen(html));
+                 "HTTP/1.1 200 OK\r\n"
+                 "Content-Length: %zu\r\n"
+                 "Content-Type: text/html;charset=utf-8\r\n"
+                //  "Connection: keep-alive\r\n"
+                "Connection: close\r\n"
+                 "\r\n",
+                 strlen(html));
     if(n < 0){
         perror("snprintf error");
         respond_404(fd);
@@ -143,7 +139,8 @@ static void respond_html(int fd){
         respond_404(fd);
         return;
     }
-    usleep(100 * 10000); 
+    // // 可暂时保留关闭，SSE 请求会走新连接；关键是上面的 JS 不再被打断
+    // usleep(100 * 1000); // 100ms
     shutdown(fd, SHUT_WR);
     drain_read(fd);
     close(fd);
@@ -151,10 +148,13 @@ static void respond_html(int fd){
 
 static void broadcast(int fd, const char* msg){
     std::vector<int> to_close;
+    // 按照 SSE 协议包装消息：每条消息使用 data: 开头，并以空行结束,不按照就没法显示。
+    std::string payload = std::string("data: ") + msg + "\n\n";
     pthread_mutex_lock(&clients_mutex);
     for(int client_fd : clients){
-        if(write_all(client_fd, msg, strlen(msg)) < 0){
+        if(write_all(client_fd, payload.c_str(), payload.size()) < 0){
             to_close.push_back(client_fd);
+            printf("shibai");
         }
     }
     for(int i :to_close){
@@ -163,6 +163,10 @@ static void broadcast(int fd, const char* msg){
     }
     pthread_mutex_unlock(&clients_mutex);
     for(int i: to_close){
+        //将设备数减去1
+        pthread_mutex_lock(&client_count_mutex);
+        client_count--;
+        pthread_mutex_unlock(&client_count_mutex);
         shutdown(i, SHUT_WR);
         drain_read(i);
         close(i);
@@ -184,8 +188,54 @@ static void keep_html(int fd){
     pthread_mutex_lock(&clients_mutex);
     clients.insert(fd);
     pthread_mutex_unlock(&clients_mutex);
+    pthread_mutex_lock(&client_count_mutex);
+    client_count++;
+    pthread_mutex_unlock(&client_count_mutex);
 
     broadcast(fd, "[系统] 欢迎新用户进入聊天室！");
+}
+
+static std::string decodeMsg(const std::string &msg){
+    std::string tmp;
+    int ii;
+    for(int i=0;i < msg.length();i++){
+        if(msg[i] == '%'){
+            std::istringstream iss(msg.substr(i+1, 2));
+            iss >> std::hex >> ii;
+            char ch = static_cast<char>(ii);
+            tmp += ch;
+            i += 2;
+        }
+        else if(msg[i] == '+') tmp += ' ';
+        else tmp += msg[i];
+    }
+    return tmp;
+}
+
+static void handleMsg(int fd, std::string &msg){
+    const char* header = 
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Length: 0\r\n"
+        "Content-Type: text/html;charset=utf-8\r\n"
+        "Connection: close\r\n"
+        "\r\n";
+    
+    if(write_all(fd, header, strlen(header)) < 0){
+        perror("write error");
+        respond_404(fd);
+        return;
+    }
+
+    auto it = msg.find("msg=");
+    if(it != std::string::npos){
+        std::cout << "cut" << std::endl;
+        msg = msg.substr(it+4);
+    }
+    std::string decoMsg = decodeMsg(msg);
+    broadcast(fd, decoMsg.c_str());
+    shutdown(fd, SHUT_WR);
+    drain_read(fd);
+    close(fd);
 }
 
 void* pthread::worker_(void* arg){
@@ -198,16 +248,21 @@ void* pthread::worker_(void* arg){
                 close(work_fd);
                 continue;
             }
+            //打印请求命令
             std::cout << buf << std::endl;
             if(buf.find("/events") != std::string::npos){
-                printf("收到 GET /events\n");
                 keep_html(work_fd);
                 continue;
             }
 
             if(buf.find("GET /") != std::string::npos){
-                printf("/come in\r\n");
                 respond_html(work_fd);
+                continue;
+            }
+
+            if(buf.find("POST /send") != std::string::npos){
+                // std::cout<<"post"<<std::endl;
+                handleMsg(work_fd, buf);
                 continue;
             }
 

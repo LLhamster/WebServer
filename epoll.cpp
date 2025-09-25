@@ -69,9 +69,7 @@ int epoll::epoll_wait_work(int sockfd) {
                         // workEvent.events = workEvents;
                         // workEvent.data.fd = connfd;
                         // epoll_ctl(epollfd_, EPOLL_CTL_ADD, connfd, &workEvent);
-                        pthread_mutex_lock(&client_count_mutex);
-                        client_count++;
-                        pthread_mutex_unlock(&client_count_mutex);
+                        
                         pthread::enque(connfd);
                     }
                 }
