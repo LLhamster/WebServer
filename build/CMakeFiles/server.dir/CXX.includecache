@@ -55,6 +55,26 @@ sstream
 -
 iomanip
 -
+iostream
+-
+memory
+-
+string
+-
+sstream
+-
+vector
+-
+mysql_driver.h
+-
+mysql_connection.h
+-
+cppconn/exception.h
+-
+cppconn/prepared_statement.h
+-
+cppconn/resultset.h
+-
 
 /home/hamster/coding/WebServer1/pthread.h
 pthread.h

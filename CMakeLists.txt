@@ -13,5 +13,19 @@ add_executable(server main.cpp util.cpp pthread.cpp epoll.cpp)
 find_package(Threads REQUIRED)
 target_link_libraries(server PRIVATE Threads::Threads)
 
+
+# -----------------------------
+# MySQL Connector/C++ 配置
+# -----------------------------
+
+# 1. 指定 MySQL Connector/C++ 的头文件路径
+# 假设 Linux 默认安装路径是 /usr/include/cppconn
+target_include_directories(server PRIVATE /usr/include/cppconn)
+
+# 2. 链接 MySQL Connector/C++ 库
+# Linux 下通常是 mysqlcppconn
+target_link_libraries(server PRIVATE mysqlcppconn)
+
 # 添加编译选项
 # target_compile_options(server PRIVATE -Wall -O2)
+
